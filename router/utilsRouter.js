@@ -41,7 +41,7 @@ router.post("/send", (req, res) => {
     }
 
     sendMail(receiverMail, senderMail, messageContent, `${senderName} has sent you a message`);
-    res.send(200);
+    res.status(200);
 });
 
 module.exports = router;

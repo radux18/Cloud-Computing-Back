@@ -1,13 +1,17 @@
-const express = require('express');
-const mysql = require('mysql');
+const express = require("express");
+const mysql = require("mysql");
 const router = express.Router();
-const connection = require('../db');
-const {detectLanguage, translateText} = require("../utils/translateFunctions")
-const {sendMail } = require("../utils/mailFunctions");
-const {LANGUAGE_ISO_CODE} = require("../utils/dictionaries");
-//Get all messages
+const connection = require("../db");
+const {
+    detectLanguage,
+    translateText,
+} = require("../utils/translateFunctions");
+const { sendMail } = require("../utils/mailFunctions");
+const { LANGUAGE_ISO_CODE } = require("../utils/dictionaries");
+
+// Get all messages
 router.get("/", (req, res) => {
-    connection.query("SELECT * FROM messages", (err, results) =>{
+    connection.query("SELECT * FROM messages", (err, results) => {
         if (err) {
             console.log(err);
             return res.send(err);
@@ -15,127 +19,144 @@ router.get("/", (req, res) => {
 
         return res.json({
             messages: results,
-        })
-    })
+        });
+    });
 });
 
-//get a message by id
+// Get a message by id
 router.get("/:id", (req, res) => {
-    const {id} = req.params;
-    connection.query(`SELECT * FROM messages where entryID = ${mysql.escape(id)}`, (err, results) =>{
-        if (err) {
-            console.log(err);
-            return res.send(err);
-        }
+    const { id } = req.params;
+    connection.query(
+        `SELECT * FROM messages where entryID = ${mysql.escape(id)} `,
+        (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.send(err);
+            }
 
-        if (!results.length) {
-            return res.status(400).json({
-                error: "Message not found",
-            })
-        }
+            if (!results.length) {
+                return res.status(400).json({
+                    error: "Message not found",
+                });
+            }
 
-        return res.json({
-            messages: results,
-        })
-    })
+            return res.json({
+                messages: results,
+            });
+        }
+    );
 });
 
-//insert a new message
+// Insert a new message
 router.post("/", (req, res) => {
-    const {
-        senderName,
-        senderMail,
-        receiverMail,
-        messageContent,
-    } = req.body;
+    const { senderName, senderMail, receiverMail, messageContent } = req.body;
 
-    if(!senderName || !senderMail || !receiverMail || !messageContent){
+    if (!senderName || !senderMail || !receiverMail || !messageContent) {
         return res.status(400).json({
             error: "All fields are required",
-        })
+        });
     }
 
+    connection.query(
+        `INSERT INTO messages (senderName, senderMail, receiverMail, messageContent) values (${mysql.escape(
+            senderName
+        )}, ${mysql.escape(senderMail)}, ${mysql.escape(
+            receiverMail
+        )}, ${mysql.escape(messageContent)})`,
+        (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.send(err);
+            }
 
-    connection.query(`INSERT INTO messages (senderName, senderMail, receiverMail, messageContent) values (${mysql.escape(senderName)}, ${mysql.escape(senderMail)}, ${mysql.escape(receiverMail)}, ${mysql.escape(messageContent)})`, (err, results) =>{
-        if (err) {
-            console.log(err);
-            return res.send(err);
+            return res.json({
+                results,
+            });
         }
-
-        return res.json({
-            results,
-        })
-    })
-
-
+    );
 });
 
-//delete a message
+// Delete a message
 router.delete("/:id", (req, res) => {
-    const {id} = req.params;
-    connection.query(`DELETE FROM messages where entryID = ${mysql.escape(id)}`, (err, results) => {
-        if (err) {
-            console.log(err);
-            return res.send(err);
+    const { id } = req.params;
+    connection.query(
+        `DELETE FROM messages where entryID = ${mysql.escape(id)}`,
+        (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.send(err);
+            }
+            return res.json({
+                results,
+            });
         }
-        return res.json({
-            results,
-        })
-    })  
+    );
 });
 
 router.put("/:id", (req, res) => {
-    const {id} = req.params;
-    const {
-        senderName,
-        senderMail,
-        receiverMail,
-        messageContent,
-    } = req.body;
+    const { id } = req.params;
+    const { senderName, senderMail, receiverMail, messageContent } = req.body;
 
-    if(!senderName || !senderMail || !receiverMail || !messageContent){
+    if (!senderName || !senderMail || !receiverMail || !messageContent) {
         return res.status(400).json({
             error: "All fields are required",
-        })
+        });
     }
 
-    connection.query(`UPDATE messages SET senderName = ${mysql.escape(senderName)}, senderMail = ${mysql.escape(senderMail)}, receiverMail = ${mysql.escape(receiverMail)}, messageContent = ${mysql.escape(messageContent)} WHERE entryID = ${mysql.escape(id)}`, (err, results) => {
-        if (err) {
-            console.log(err);
-            return res.send(err);
+    connection.query(
+        `UPDATE messages SET senderName = ${mysql.escape(
+            senderName
+        )}, senderMail = ${mysql.escape(senderMail)}, receiverMail = ${mysql.escape(
+            receiverMail
+        )}, messageContent = ${mysql.escape(
+            messageContent
+        )} WHERE entryID = ${mysql.escape(id)}`,
+        (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.send(err);
+            }
+            return res.json({
+                results,
+            });
         }
-        return res.json({
-            results,
-        });
-    })
+    );
 });
 
 router.post("/foreign", async (req, res) => {
-    const {senderName, senderMail, receiverMail, messageContent, language} = req.body;
+    const { senderName, senderMail, receiverMail, messageContent, language } =
+        req.body;
 
-    if(!senderName || !senderMail || !receiverMail || !messageContent || !language){
+    if (
+        !senderName ||
+        !senderMail ||
+        !receiverMail ||
+        !messageContent ||
+        !language
+    ) {
         return res.status(400).json({
             error: "All fields are required",
-        })
+        });
     }
 
-    if(!LANGUAGE_ISO_CODE[language] && language != "ALL"){
+    if (!LANGUAGE_ISO_CODE[language] && language !== "ALL") {
+        console.log(language);
         return res.status(400).send("Invalid Language");
     }
 
-    let transationData = {};
+    let translationData = {};
 
     try {
-       if(LANGUAGE_ISO_CODE[language]){
-           const translatedText = await translateText(
-               messageContent,
-               LANGUAGE_ISO_CODE[language]
-        );   
-        transationData.translatedText = translatedText[0];
-    }
-     else if (language === "ALL"){
+        if (LANGUAGE_ISO_CODE[language]) {
+            const translatedText = await translateText(
+                messageContent,
+                LANGUAGE_ISO_CODE[language]
+            );
+            translationData.translatedText = translatedText[0];
+        }
+        else if (language === "ALL") {
             const availableLanguages = Object.values(LANGUAGE_ISO_CODE);
-            
+
             const translatedAnswersArray = await Promise.all(
                 availableLanguages.map(async (language) => {
                     const translatedText = await translateText(messageContent, language);
@@ -143,30 +164,41 @@ router.post("/foreign", async (req, res) => {
                 })
             );
 
-            transationData.translatedText = translatedAnswersArray.reduce(
+            translationData.translatedText = translatedAnswersArray.reduce(
                 (acc, curr) => {
-                    return acc + curr + "\n"
-                }, ""
-            )
+                    return acc + curr + "\n";
+                },
+                ""
+            );
         }
         else {
             return res.send("Invalid Language");
         }
+        sendMail(
+            receiverMail,
+            senderMail,
+            translationData.translatedText,
+            `${senderName} has sent you a message`
+        );
 
-        sendMail(receiverMail, senderMail, transationData.translatedText, `${senderName} has sent you a message`);
+        connection.query(
+            `INSERT INTO messages (senderName, senderMail, receiverMail, messageContent) values (${mysql.escape(
+                senderName
+            )}, ${mysql.escape(senderMail)}, ${mysql.escape(
+                receiverMail
+            )}, ${mysql.escape(messageContent)})`,
+            (err, results) => {
+                if (err) {
+                    console.log(err);
+                    return res.send(err);
+                }
 
-        connection.query(`INSERT INTO messages (senderName, senderMail, receiverMail, messageContent) values (${mysql.escape(senderName)}, ${mysql.escape(senderMail)}, ${mysql.escape(receiverMail)}, ${mysql.escape(messageContent)})`, (err, results) => {
-            if(err) {
-                console.log(err);
-                return res.send(err);
+                return res.json({
+                    translationData,
+                });
             }
-
-            return res.json({
-                transationData
-            });
-        }
-    );
-    }catch(err){
+        );
+    } catch (err) {
         console.log(err);
         return res.send(err);
     }
