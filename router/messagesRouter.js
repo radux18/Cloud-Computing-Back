@@ -34,7 +34,7 @@ router.get("/:id", (req, res) => {
                 return res.send(err);
             }
 
-            if (!results.length) {
+            if (results.length) {
                 return res.status(400).json({
                     error: "Message not found",
                 });
