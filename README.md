@@ -14,4 +14,6 @@ Translate Api(Translation AI) - Un API care poate traducre in mod dinamic text i
 
 SendGrid - Conectorul Sendgrid permite sa trimitem e-mailuri si sa interactionam direct cu fluxuri de mail-uri. Putem de asemenea sa trimitem mail-uri individuale, de tip bloc.
 
+Fluxuri de date:
 
+DEMO LINK: https://youtu.be/Xs4gAmvCYcQ
